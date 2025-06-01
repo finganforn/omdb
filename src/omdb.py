@@ -5,7 +5,7 @@ omdbkey1 = '5869c44e'
 omdbkey2 = 'bc8babb5'
 
 
-url0 = 'http://www.omdbapi.com/?apikey=' + omdbkey2
+url0 = 'http://www.omdbapi.com/?apikey=' + omdbkey1
 #url0 = url0 + '&plot=full&'
 headers = {'Authorization': 'Bearer YOUR_API_TOKEN'}
 
@@ -24,7 +24,7 @@ movies = []
 i = 0
 fails = 0
 bigFails = 0
-while movies.__len__() < 100 and i < 500:
+while movies.__len__() < 20 and i < 50:
     i = i + 1  
 
     url = url0 + '&i=' + randId()
@@ -49,3 +49,4 @@ for movie in movies:
     print(f"Title: {movie.get('Title', 'N/A')}, Year: {movie.get('Year', 'N/A')}, Plot: {movie.get('Plot', 'N/A')}")
 print(str(fails) + ' fails')
 print('Total movies found:', len(movies))
+
