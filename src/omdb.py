@@ -1,5 +1,7 @@
+#omdb.py
 import requests
 import random
+
 
 omdbkey1 = '5869c44e'
 omdbkey2 = 'bc8babb5'
@@ -19,34 +21,42 @@ def randId():
         res = 'tt01'
     return res + str(random.randint(10000, 99999))
 
-movies = []
 
-i = 0
-fails = 0
-bigFails = 0
-while movies.__len__() < 20 and i < 50:
-    i = i + 1  
 
-    url = url0 + '&i=' + randId()
-    #url = url + 'type=movie'
 
-    #randomYear = random.randint(1940, 2023)
-    #randomLetter = chr(random.randint(65, 90))
-    #url = f"{url0}&s={randomLetter}&y={randomYear}&type=movie&page=1"
-    
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get('Plot') == 'N/A' or response.json().get('Response') == 'False':
-            fails += 1
+# This script fetches random movie data from the OMDB API
+# and prints the title, year, and plot of each movie.
+def fetch_random_movies(amount):
+    movies = []
+
+    i = 0
+    fails = 0
+    bigFails = 0
+    while movies.__len__() < amount and i < amount*3:
+        i = i + 1  
+
+        url = url0 + '&i=' + randId()
+        #url = url + 'type=movie'
+
+        #randomYear = random.randint(1940, 2023)
+        #randomLetter = chr(random.randint(65, 90))
+        #url = f"{url0}&s={randomLetter}&y={randomYear}&type=movie&page=1"
+        
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('Plot') == 'N/A' or response.json().get('Response') == 'False':
+                fails += 1
+            else:
+                movies.append(data)
         else:
-            movies.append(data)
-    else:
-        bigFails += 1
-        print(f"Error: {response.status_code}")
+            bigFails += 1
+            print(f"Error: {response.status_code}")
 
-for movie in movies:
-    print(f"Title: {movie.get('Title', 'N/A')}, Year: {movie.get('Year', 'N/A')}, Plot: {movie.get('Plot', 'N/A')}")
-print(str(fails) + ' fails')
-print('Total movies found:', len(movies))
+    for movie in movies:
+        print(f"Title: {movie.get('Title', 'N/A')}, Year: {movie.get('Year', 'N/A')}, Plot: {movie.get('Plot', 'N/A')}")
+    print(str(fails) + ' fails')
+    print('Total movies found:', len(movies))
+    return movies
+
 
