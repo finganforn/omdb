@@ -53,8 +53,8 @@ def fetch_random_movies(amount):
             bigFails += 1
             print(f"Error: {response.status_code}")
 
-    for movie in movies:
-        print(f"Title: {movie.get('Title', 'N/A')}, Year: {movie.get('Year', 'N/A')}, Plot: {movie.get('Plot', 'N/A')}")
+    ##for movie in movies:
+      #  print(f"Title: {movie.get('Title', 'N/A')}, Year: {movie.get('Year', 'N/A')}, Plot: {movie.get('Plot', 'N/A')}")
     print(str(fails) + ' fails')
     print('Total movies found:', len(movies))
     return movies
