@@ -1,14 +1,54 @@
 
 from fastapi import FastAPI
 from .omdb import *  # Import the OMDB API wrapper
+# py -m pip install peewee
+from peewee import *
 
 
-movies = []  # Initialize an empty list to store movies
 
-#database implementation later
 
-if movies.__len__() == 0:  # Check if the list is empty
-    movies = fetch_random_movies(20)  # Fetch random movies from OMDB API
+#database implementation soon
+
+db = SqliteDatabase('movies.db')
+db.connect()
+
+class Movie(Model):
+    title = CharField()
+    year = IntegerField()
+    plot = TextField()
+    imdb_id = CharField(unique=True)
+
+    class Meta:
+        database = db
+
+
+
+if db.get_tables() == []:  # If there are no tables in the database
+    print("Creating database and tables...")
+    db.create_tables([Movie])
+    initialMovies = fetch_random_movies(10)  # Fetch initial random movies from OMDB API
+    for movie in initialMovies:
+        strYear = movie.get('Year', '0')
+        #if strYear contains - remove after the dash
+        if '-' in strYear:
+            strYear = strYear.split('-')[0]
+        if '–' in strYear:
+            strYear = strYear.split('–')[0]
+        try:
+            Movie.create(
+                title=movie.get('Title', 'N/A'),
+                year=int(strYear),
+                plot=movie.get('Plot', 'N/A'),
+                imdb_id=movie.get('imdbID', 'N/A')
+            )
+        except IntegrityError:
+            print(f"Movie with IMDB ID {movie.get('imdbID')} already exists.")
+else:
+    print("Database already exists, skipping creation.")
+    #get size of Movie table
+    print(f"Number of movies in database: {Movie.select().count()}")
+    for movie in Movie.select():
+        print(movie.title, movie.year, movie.plot)
 
 app = FastAPI()
 
