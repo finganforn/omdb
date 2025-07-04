@@ -12,7 +12,7 @@ from peewee import *
 db = SqliteDatabase('movies.db')
 db.connect()
 
-initialMoviesAmount = 25
+initialMoviesAmount = 50
 
 class Movie(Model):
     title = CharField()
@@ -64,46 +64,92 @@ else:
 
 app = FastAPI()
 
+
+def movieToJson(movie):
+    return {
+        "Title": movie.title,
+        "Year": movie.year,
+        "Plot": movie.plot,
+        "imdbID": movie.imdb_id
+    }
+
 def getXmovies(limit):
     query = (Movie
              .select()
              .limit(limit)
-             .order_by(Movie.year.desc()))
+             .order_by(Movie.title.asc()))
     list = []
     for movie in query:
-        list.append({
-            "Title": movie.title,
-            "Year": movie.year,
-            "Plot": movie.plot,
-            "imdbID": movie.imdb_id
-        })
+        list.append(movieToJson(movie))
     return list
 
 @app.get("/") # Root endpoint 
 def get10(): #will return 10 by default
     return getXmovies(10)
+
+@app.get("/time")
+def getAll():
+    #get all movies
+    query = Movie.select().order_by(Movie.year.asc())
+    list = []
+    for movie in query:
+        list.append(movieToJson(movie))
+    return list
     
 
 @app.get("/limit/{limit}")
 def getSpecificNum(limit: int):
     return getXmovies(limit)
 
-@app.get("/item/{item_title}")
+@app.get("/name/{item_title}")
 def read_item(item_title: str):
     #get by title
     try:
         movie = Movie.get(Movie.title == item_title)
-        return {
-            "Title": movie.title,
-            "Year": movie.year,
-            "Plot": movie.plot,
-            "imdbID": movie.imdb_id
-        }  
+        return movieToJson(movie)
+    
+    except Movie.DoesNotExist:
+        return {"error": "Item not found"}
+    
+@app.get("/id/{imdb_id}")
+def get_by_imdb(imdb_id: str):
+    #get by imdb_id
+    try:
+        movie = Movie.get(Movie.imdb_id == imdb_id)
+        return movieToJson(movie)
+    
     except Movie.DoesNotExist:
         return {"error": "Item not found"}
 
-@app.post("/item/")
-def create_item(item):
-    return {"item": item}
+from pydantic import BaseModel
+
+class MovieItem(BaseModel):
+    title: str
+    year: int
+    plot: str
+    imdb_id: str
+
+@app.post("/item")
+async def create_item(item: MovieItem):
+    #create item
+    print("*********************** Creating item:", item)
+
+    print("Creating item:", item)
+    try:
+        movie = Movie.create(
+        title=item.title,
+           year=item.year,
+           plot=item.plot,
+           imdb_id=item.imdb_id
+        )
+        return movieToJson(movie)
+    
+    except IntegrityError:
+        return {"error": "Item already exists"}
+    except Exception as e:
+        return {"error": str(e)}
+    
+
+        
 
 
