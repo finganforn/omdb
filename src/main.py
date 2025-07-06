@@ -7,6 +7,7 @@ from peewee import *
 
 
 
+
 #database implementation soon
 
 db = SqliteDatabase('movies.db')
@@ -72,7 +73,13 @@ def movieToJson(movie):
         "Plot": movie.plot,
         "imdbID": movie.imdb_id
     }
-
+def jsonToMovie(json):
+    return Movie(
+        title=json.get('Title', 'N/A'),
+        year=json.get('Year', 0),
+        plot=json.get('Plot', 'N/A'),
+        imdb_id=json.get('imdbID', 'N/A')
+    )
 def getXmovies(limit):
     query = (Movie
              .select()
@@ -84,11 +91,11 @@ def getXmovies(limit):
     return list
 
 @app.get("/") # Root endpoint 
-def get10(): #will return 10 by default
+async def get10(): #will return 10 by default
     return getXmovies(10)
 
 @app.get("/time")
-def getAll():
+async def getAll():
     #get all movies
     query = Movie.select().order_by(Movie.year.asc())
     list = []
@@ -98,27 +105,37 @@ def getAll():
     
 
 @app.get("/limit/{limit}")
-def getSpecificNum(limit: int):
+async def getSpecificNum(limit: int):
     return getXmovies(limit)
 
 @app.get("/name/{item_title}")
-def read_item(item_title: str):
+async def read_item(item_title: str):
     #get by title
     try:
         movie = Movie.get(Movie.title == item_title)
         return movieToJson(movie)
     
     except Movie.DoesNotExist:
+        newMovie = await fetch_movie_by_title(item_title)
+        if newMovie:
+            create_item(newMovie)
+            return movieToJson(newMovie)
         return {"error": "Item not found"}
     
 @app.get("/id/{imdb_id}")
-def get_by_imdb(imdb_id: str):
+async def get_by_imdb(imdb_id: str):
     #get by imdb_id
     try:
         movie = Movie.get(Movie.imdb_id == imdb_id)
+        # return 201 status code
         return movieToJson(movie)
+        
     
     except Movie.DoesNotExist:
+        newMovie = await fetch_movie_by_id(imdb_id)
+        if newMovie:
+            create_item(newMovie)
+            return movieToJson(newMovie)
         return {"error": "Item not found"}
 
 from pydantic import BaseModel
@@ -142,7 +159,7 @@ async def create_item(item: MovieItem):
            plot=item.plot,
            imdb_id=item.imdb_id
         )
-        return movieToJson(movie)
+        return 
     
     except IntegrityError:
         return {"error": "Item already exists"}

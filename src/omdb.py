@@ -59,4 +59,32 @@ def fetch_random_movies(amount):
     print('Total movies found:', len(movies))
     return movies
 
+def fetch_movie_by_id(imdb_id):
+    url = f"{url0}&i={imdb_id}"
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('Response') == 'True':
+            return data
+        else:
+            print(f"Movie with ID {imdb_id} not found.")
+            return None
+    else:
+        print(f"Error: {response.status_code}")
+        return None
+
+def fetch_movie_by_title(title):
+    url = f"{url0}&t={title}"
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('Response') == 'True':
+            return data
+        else:
+            print(f"Movie with title '{title}' not found.")
+            return None
+    else:
+        print(f"Error: {response.status_code}")
+        return None
+
 
