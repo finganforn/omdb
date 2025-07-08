@@ -116,7 +116,7 @@ async def read_item(item_title: str):
         return movieToJson(movie)
     
     except Movie.DoesNotExist:
-        newMovie = await fetch_movie_by_title(item_title)
+        newMovie = fetch_movie_by_title(item_title)
         if newMovie:
             create_item(newMovie)
             return movieToJson(newMovie)
@@ -132,7 +132,7 @@ async def get_by_imdb(imdb_id: str):
         
     
     except Movie.DoesNotExist:
-        newMovie = await fetch_movie_by_id(imdb_id)
+        newMovie = fetch_movie_by_id(imdb_id)
         if newMovie:
             create_item(newMovie)
             return movieToJson(newMovie)
@@ -147,26 +147,32 @@ class MovieItem(BaseModel):
     imdb_id: str
 
 @app.post("/item")
-async def create_item(item: MovieItem):
+async def create_item_ep(item: MovieItem):
     #create item
-    print("*********************** Creating item:", item)
+    print("POST ENDPOINT: *********************** Creating item:", item)
 
-    print("Creating item:", item)
+    newMovie = {
+        'Title': item.title,
+        'Year': item.year,
+        'Plot': item.plot,
+        'imdbID': item.imdb_id
+    }
+    res = create_item(newMovie)
+    if res is None:
+        return {"message": "Item created successfully"}
+    return {"error": "Failed to create item"}
+
+
+def create_item(newMovie):
+    #create item from newMovie
     try:
-        movie = Movie.create(
-        title=item.title,
-           year=item.year,
-           plot=item.plot,
-           imdb_id=item.imdb_id
+        Movie.create(
+            title=newMovie.get('Title', 'N/A'),
+            year=int(newMovie.get('Year', 0)),
+            plot=newMovie.get('Plot', 'N/A'),
+            imdb_id=newMovie.get('imdbID', 'N/A')
         )
-        return 
-    
     except IntegrityError:
-        return {"error": "Item already exists"}
+        print(f"Movie with IMDB ID {newMovie.get('imdbID')} already exists.")
     except Exception as e:
-        return {"error": str(e)}
-    
-
-        
-
-
+        print(f"Error creating movie: {str(e)}")
