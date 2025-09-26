@@ -1,6 +1,6 @@
 
 from fastapi import FastAPI
-from .omdb import *  # Import the OMDB API wrapper
+from omdb import *  # Import the OMDB API wrapper
 # py -m pip install peewee
 from peewee import *
 
@@ -23,18 +23,23 @@ class Movie(Model):
 
     class Meta:
         database = db
+        
+def parseYear(yearStr):
+    strYear = str(yearStr)
+    #if strYear contains - remove after the dash
+    if '-' in strYear:
+        strYear = strYear.split('-')[0]
+    if '–' in strYear:
+        strYear = strYear.split('–')[0]
+    if not strYear.isdigit():
+        strYear = '0'
+    return strYear
 
 def fillDB(amount):
     initialMovies = fetch_random_movies(amount)  # Fetch initial random movies from OMDB API
     for movie in initialMovies:
         strYear = movie.get('Year', '0')
-        #if strYear contains - remove after the dash
-        if '-' in strYear:
-            strYear = strYear.split('-')[0]
-        if '–' in strYear:
-            strYear = strYear.split('–')[0]
-        if not strYear.isdigit():
-            strYear = '0'
+        strYear = parseYear(strYear)
         try:
             Movie.create(
                 title=movie.get('Title', 'N/A'),
@@ -91,11 +96,11 @@ def getXmovies(limit):
     return list
 
 @app.get("/") # Root endpoint 
-async def get10(): #will return 10 by default
+def get10(): #will return 10 by default
     return getXmovies(10)
 
 @app.get("/time")
-async def getAll():
+def getAll():
     #get all movies
     query = Movie.select().order_by(Movie.year.asc())
     list = []
@@ -105,10 +110,10 @@ async def getAll():
     
 
 @app.get("/limit/{limit}")
-async def getSpecificNum(limit: int):
+def getSpecificNum(limit: int):
     return getXmovies(limit)
 
-@app.get("/name/{item_title}")
+@app.get("/title/{item_title}")
 async def read_item(item_title: str):
     #get by title
     try:
@@ -116,10 +121,16 @@ async def read_item(item_title: str):
         return movieToJson(movie)
     
     except Movie.DoesNotExist:
+        #print(f"fetch the new movie {item_title} ")
         newMovie = fetch_movie_by_title(item_title)
         if newMovie:
-            create_item(newMovie)
-            return movieToJson(newMovie)
+            print(f"add the new movie {item_title} with async and return it")
+            await create_item(newMovie)
+            movieMovie = jsonToMovie(newMovie)
+            jsonMovie = movieToJson(movieMovie)
+            #jreturn = movieToJson(newMovie)
+            print("API CALL DONE, RETURNING")
+            return jsonMovie
         return {"error": "Item not found"}
     
 @app.get("/id/{imdb_id}")
@@ -134,7 +145,7 @@ async def get_by_imdb(imdb_id: str):
     except Movie.DoesNotExist:
         newMovie = fetch_movie_by_id(imdb_id)
         if newMovie:
-            create_item(newMovie)
+            await create_item(newMovie)
             return movieToJson(newMovie)
         return {"error": "Item not found"}
 
@@ -157,22 +168,32 @@ async def create_item_ep(item: MovieItem):
         'Plot': item.plot,
         'imdbID': item.imdb_id
     }
-    res = create_item(newMovie)
+    res = await create_item(newMovie)
     if res is None:
         return {"message": "Item created successfully"}
-    return {"error": "Failed to create item"}
+    return {"error": res}
 
 
-def create_item(newMovie):
+async def create_item(newMovie):
     #create item from newMovie
+    
     try:
+        #print(f"trying to parse year of {newMovie}")
+        year = parseYear(newMovie.get('Year', 0))
+        #print(f"parsed year as {year}")
         Movie.create(
             title=newMovie.get('Title', 'N/A'),
-            year=int(newMovie.get('Year', 0)),
+            #year=int(newMovie.get('Year', 0)),
+            year=int(year),
             plot=newMovie.get('Plot', 'N/A'),
             imdb_id=newMovie.get('imdbID', 'N/A')
         )
-    except IntegrityError:
+        
+        #print(f"CREATE FUNC for {newMovie.get('Title', 'N/A')} FINISHED WITHOUT CRASHING")
+        
+    except IntegrityError as e:
         print(f"Movie with IMDB ID {newMovie.get('imdbID')} already exists.")
+        return e
     except Exception as e:
         print(f"Error creating movie: {str(e)}")
+    
