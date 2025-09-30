@@ -197,3 +197,23 @@ async def create_item(newMovie):
     except Exception as e:
         print(f"Error creating movie: {str(e)}")
     
+@app.delete("/id/{imdb_id}")
+def delete_by_imdb(imdb_id: str):
+    #delete by imdb_id
+    try:
+        movie = Movie.get(Movie.imdb_id == imdb_id)
+        movie.delete_instance()
+        return {"message": "Item deleted successfully"}
+    except Movie.DoesNotExist:
+        return {"error": "Item not found"}
+    
+@app.delete("/title/{item_title}")
+def delete_by_title(item_title: str):
+    #delete by title
+    try:
+        movie = Movie.get(Movie.title == item_title)
+        movie.delete_instance()
+        return {"message": "Item deleted successfully"}
+    except Movie.DoesNotExist:
+        return {"error": "Item not found"}
+    # Optionally, you could also return the deleted movie information
