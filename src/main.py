@@ -119,18 +119,12 @@ async def read_item(item_title: str):
     try:
         movie = Movie.get(Movie.title == item_title)
         return movieToJson(movie)
-    
     except Movie.DoesNotExist:
-        #print(f"fetch the new movie {item_title} ")
         newMovie = fetch_movie_by_title(item_title)
         if newMovie:
-            print(f"add the new movie {item_title} with async and return it")
             await create_item(newMovie)
             movieMovie = jsonToMovie(newMovie)
-            jsonMovie = movieToJson(movieMovie)
-            #jreturn = movieToJson(newMovie)
-            print("API CALL DONE, RETURNING")
-            return jsonMovie
+            return movieToJson(movieMovie)
         return {"error": "Item not found"}
     
 @app.get("/id/{imdb_id}")
@@ -138,15 +132,14 @@ async def get_by_imdb(imdb_id: str):
     #get by imdb_id
     try:
         movie = Movie.get(Movie.imdb_id == imdb_id)
-        # return 201 status code
         return movieToJson(movie)
-        
-    
     except Movie.DoesNotExist:
         newMovie = fetch_movie_by_id(imdb_id)
         if newMovie:
             await create_item(newMovie)
-            return movieToJson(newMovie)
+            movieMovie = jsonToMovie(newMovie)
+            return movieToJson(movieMovie)
+            #return newMovie
         return {"error": "Item not found"}
 
 from pydantic import BaseModel
