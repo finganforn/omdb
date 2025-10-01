@@ -139,7 +139,6 @@ async def get_by_imdb(imdb_id: str):
             await create_item(newMovie)
             movieMovie = jsonToMovie(newMovie)
             return movieToJson(movieMovie)
-            #return newMovie
         return {"error": "Item not found"}
 
 from pydantic import BaseModel
@@ -153,7 +152,7 @@ class MovieItem(BaseModel):
 @app.post("/item")
 async def create_item_ep(item: MovieItem):
     #create item
-    print("POST ENDPOINT: *********************** Creating item:", item)
+    #print("POST ENDPOINT: *********************** Creating item:", item)
 
     newMovie = {
         'Title': item.title,
@@ -182,8 +181,6 @@ async def create_item(newMovie):
             imdb_id=newMovie.get('imdbID', 'N/A')
         )
         
-        #print(f"CREATE FUNC for {newMovie.get('Title', 'N/A')} FINISHED WITHOUT CRASHING")
-        
     except IntegrityError as e:
         print(f"Movie with IMDB ID {newMovie.get('imdbID')} already exists.")
         return e
@@ -209,4 +206,3 @@ def delete_by_title(item_title: str):
         return {"message": "Item deleted successfully"}
     except Movie.DoesNotExist:
         return {"error": "Item not found"}
-    # Optionally, you could also return the deleted movie information

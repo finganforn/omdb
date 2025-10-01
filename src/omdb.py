@@ -67,7 +67,7 @@ def fetch_movie_by_id(imdb_id):
         if data.get('Response') == 'True':
             return data
         else:
-            print(f"Movie with ID {imdb_id} not found.")
+            #print(f"Movie with ID {imdb_id} not found.")
             return None
     else:
         print(f"Error: {response.status_code}")
@@ -81,7 +81,7 @@ def fetch_movie_by_title(title):
         if data.get('Response') == 'True':
             return data
         else:
-            print(f"Movie with title '{title}' not found.")
+            #print(f"Movie with title '{title}' not found.")
             return None
     else:
         print(f"Error: {response.status_code}")
